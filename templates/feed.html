@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if session.get('user_id') %}
+<div class="card" style="background: #f0f4f8;">
+    <h3 style="margin-top:0;">Create a Post</h3>
+    <form action="{{ url_for('create_post') }}" method="POST" enctype="multipart/form-data">
+        <textarea name="caption" rows="3" placeholder="Write something..."></textarea><br>
+        <input type="file" name="image" accept="image/*"><br><br>
+        <button type="submit">Post</button>
+    </form>
+</div>
+{% endif %}
+
+<h3>Feed</h3>
+{% for post in posts %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
+        <span><b>{{ post.author.username }}</b> {% if post.author.is_admin %}<span class="admin-badge">ADMIN</span>{% endif %}</span>
+        
+        {% if session.get('is_admin') %}
+        <form action="{{ url_for('admin_delete_post', post_id=post.id) }}" method="POST" style="margin: 0;">
+            <button type="submit" class="btn-del" onclick="return confirm('Delete this post?')">DELETE</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if post.caption %}
+        <p style="margin: 8px 0;">{{ post.caption }}</p>
+    {% endif %}
+
+    {% if post.image_filename %}
+        <img src="{{ url_for('static', filename='uploads/' + post.image_filename) }}" class="post-img" />
+    {% endif %}
+</div>
+{% endfor %}
+
+{% endblock %}

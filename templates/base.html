@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retro Social</title>
+    <style>
+        body { font-family: Tahoma, Verdana, sans-serif; background-color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 650px; margin: 0 auto; background: #ffffff; border: 2px solid #555; padding: 15px; box-shadow: 4px 4px 0px #888888; }
+        header { background: #000080; color: white; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        header a { color: #ffff00; font-weight: bold; text-decoration: none; }
+        .card { border: 1px solid #aaa; background: #f9f9f9; padding: 10px; margin-bottom: 15px; }
+        .post-img { max-width: 100%; border: 1px solid #ccc; margin-top: 5px; }
+        .admin-badge { background: red; color: white; font-size: 10px; padding: 2px 4px; font-weight: bold; border-radius: 3px; }
+        .btn-del { background: #cc0000; color: white; border: 1px solid black; cursor: pointer; padding: 3px 8px; font-weight: bold; }
+        textarea, input[type="text"], input[type="password"] { width: 95%; margin-bottom: 8px; padding: 5px; }
+        button { background: #d4d0c8; border: 2px outset #ffffff; cursor: pointer; padding: 4px 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <span style="font-size: 18px; font-weight: bold;">[ Retro Wall ]</span>
+        <div>
+            {% if session.get('user_id') %}
+                Logged in as: <b>{{ session['username'] }}</b> 
+                {% if session.get('is_admin') %}<span class="admin-badge">ADMIN</span>{% endif %}
+                | <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a> | <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="background: #ffffcc; border: 1px solid #cc9900; padding: 8px; margin-bottom: 10px;">
+          {% for msg in messages %}<p style="margin: 0;">{{ msg }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</div>
+</body>
+</html>
