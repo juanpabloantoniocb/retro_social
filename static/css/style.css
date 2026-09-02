@@ -1,0 +1,421 @@
+/* ============================================================
+   MONTHLY — design tokens
+   A small personal magazine. Masthead, hairline rules, bylines.
+   ============================================================ */
+
+:root {
+  --paper: #f3efe4;
+  --paper-raised: #fbf9f3;
+  --ink: #1c1a17;
+  --ink-soft: #4a453d;
+  --muted: #837b6c;
+  --navy: #1f2c4c;
+  --navy-soft: #33436b;
+  --gold: #b1852c;
+  --gold-soft: #d9b876;
+  --oxblood: #7a2a2a;
+  --oxblood-soft: #9c4646;
+  --rule: #d8d0bd;
+
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: "Source Serif 4", Georgia, serif;
+  --font-ui: "Work Sans", -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 24px 16px 60px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.55;
+}
+
+a { color: inherit; }
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ---------- Masthead ---------- */
+
+.masthead {
+  text-align: center;
+  padding: 6px 0 18px;
+}
+
+.masthead-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.masthead-mark svg { width: 34px; height: 34px; flex-shrink: 0; }
+
+.wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 42px;
+  letter-spacing: 0.5px;
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.issue-line {
+  margin-top: 2px;
+  font-family: var(--font-ui);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- Nav ---------- */
+
+.nav {
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 10px 0;
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+
+.nav a, .nav .nav-user {
+  padding: 4px 14px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  border-right: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.nav a:last-child, .nav-group:last-child a:last-child { border-right: none; }
+
+.nav a.active {
+  color: var(--navy);
+  font-weight: 600;
+  border-bottom: 2px solid var(--gold);
+}
+
+.nav a:hover { color: var(--navy); }
+
+.nav-right { margin-left: auto; border-right: none !important; }
+
+/* ---------- Flash messages ---------- */
+
+.flash {
+  background: var(--paper-raised);
+  border: 1px solid var(--gold-soft);
+  border-left: 4px solid var(--gold);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.flash p { margin: 2px 0; }
+
+/* ---------- Section heading ---------- */
+
+.section-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--ink);
+  margin: 4px 0 4px;
+}
+
+.section-sub {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ---------- Compose box ---------- */
+
+.compose {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  padding: 16px 18px;
+  margin-bottom: 32px;
+}
+
+.compose-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+textarea, input[type="text"], input[type="password"] {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 15px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+textarea:focus, input:focus {
+  outline: 2px solid var(--navy-soft);
+  outline-offset: 1px;
+}
+
+input[type="file"] {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.compose-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+button, .btn {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 13px;
+  background: var(--navy);
+  color: var(--paper-raised);
+  border: none;
+  cursor: pointer;
+  padding: 9px 18px;
+  letter-spacing: 0.2px;
+}
+
+button:hover, .btn:hover { background: var(--navy-soft); }
+
+.btn-del {
+  background: transparent;
+  color: var(--oxblood);
+  border: 1px solid var(--oxblood-soft);
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn-del:hover { background: var(--oxblood); color: var(--paper-raised); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--navy);
+  border: 1px solid var(--navy);
+}
+
+.btn-outline:hover { background: var(--navy); color: var(--paper-raised); }
+
+/* ---------- Articles / posts ---------- */
+
+.article {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.article:first-of-type { padding-top: 0; }
+
+.article-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.byline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.byline a {
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.byline a:hover { color: var(--navy); text-decoration: underline; }
+
+.kicker {
+  color: var(--gold);
+  font-style: italic;
+}
+
+.byline-date {
+  color: var(--muted);
+}
+
+.admin-badge {
+  background: var(--oxblood);
+  color: var(--paper-raised);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  padding: 1px 6px;
+  margin-left: 4px;
+}
+
+.article-body {
+  font-size: 17px;
+  color: var(--ink);
+  white-space: pre-wrap;
+  margin: 0 0 10px;
+}
+
+.article-img {
+  max-width: 100%;
+  display: block;
+  border: 1px solid var(--rule);
+  margin-top: 6px;
+}
+
+.empty-state {
+  font-family: var(--font-ui);
+  color: var(--muted);
+  font-style: italic;
+  padding: 30px 0;
+  text-align: center;
+}
+
+/* ---------- Avatars ---------- */
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+
+.avatar-fallback {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--gold-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-large {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--navy);
+}
+
+.avatar-fallback-large {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--gold-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--navy);
+}
+
+/* ---------- Profile header ---------- */
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.profile-meta {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 6px;
+}
+
+.profile-bio {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.profile-actions { margin-top: 8px; }
+
+/* ---------- Auth pages ---------- */
+
+.auth-card {
+  max-width: 380px;
+  margin: 10px auto 0;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  padding: 28px 26px;
+}
+
+.auth-card h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin: 0 0 18px;
+  text-align: center;
+  color: var(--navy);
+}
+
+.auth-card label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.auth-card button { width: 100%; padding: 10px; margin-top: 6px; }
+
+.auth-switch {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+.auth-switch a { color: var(--navy); font-weight: 600; }
+
+@media (max-width: 480px) {
+  .wordmark { font-size: 32px; }
+  .nav a, .nav .nav-user { padding: 4px 9px; font-size: 13px; }
+}

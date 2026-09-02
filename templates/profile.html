@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Monthly — {{ profile_user.username }}{% endblock %}
+{% block content %}
+
+<div class="profile-header">
+    {% if profile_user.avatar_filename %}
+        <img class="avatar-large" src="{{ url_for('static', filename='avatars/' + profile_user.avatar_filename) }}" alt="">
+    {% else %}
+        <span class="avatar-fallback-large">{{ profile_user.username[0]|upper }}</span>
+    {% endif %}
+    <div>
+        <p class="profile-name">{{ profile_user.username }}{% if profile_user.is_admin %} <span class="admin-badge">ADMIN</span>{% endif %}</p>
+        <p class="profile-meta">
+            {{ posts|length }} piece{{ '' if posts|length == 1 else 's' }} published
+            {% if profile_user.joined_at %}&middot; joined {{ profile_user.joined_at.strftime('%B %Y') }}{% endif %}
+        </p>
+        {% if profile_user.bio %}
+            <p class="profile-bio">{{ profile_user.bio }}</p>
+        {% endif %}
+        {% if current_user and current_user.id == profile_user.id %}
+            <p class="profile-actions"><a class="btn btn-outline" href="{{ url_for('edit_profile') }}">Edit profile</a></p>
+        {% endif %}
+    </div>
+</div>
+
+{% if posts %}
+    {% for post in posts %}
+        {% set show_kicker = true %}
+        {% include '_article.html' with context %}
+    {% endfor %}
+{% else %}
+    <p class="empty-state">{{ profile_user.username }} hasn't published anything yet.</p>
+{% endif %}
+
+{% endblock %}

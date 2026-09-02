@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Monthly — Home{% endblock %}
+{% block content %}
+
+<h1 class="section-heading">Home</h1>
+<p class="section-sub">Everything, from everyone — the day's dispatches.</p>
+
+{% if current_user %}
+<div class="compose">
+    <p class="compose-label">Post to Home</p>
+    <form action="{{ url_for('create_post') }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="category" value="general">
+        <textarea name="caption" rows="3" placeholder="What's happening?"></textarea>
+        <div class="compose-row">
+            <input type="file" name="image" accept="image/*">
+            <button type="submit">Publish</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% if posts %}
+    {% for post in posts %}
+        {% include '_article.html' with context %}
+    {% endfor %}
+{% else %}
+    <p class="empty-state">No dispatches yet. Be the first to post.</p>
+{% endif %}
+
+{% endblock %}

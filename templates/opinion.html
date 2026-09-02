@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Monthly — Opinion Pieces{% endblock %}
+{% block content %}
+
+<h1 class="section-heading">Opinion Pieces</h1>
+<p class="section-sub">Arguments, takes, and things people feel strongly about. Text only.</p>
+
+{% if current_user %}
+<div class="compose">
+    <p class="compose-label">Write an opinion piece</p>
+    <form action="{{ url_for('create_post') }}" method="POST">
+        <input type="hidden" name="category" value="opinion">
+        <textarea name="caption" rows="4" placeholder="Make your case..."></textarea>
+        <div class="compose-row" style="justify-content: flex-end;">
+            <button type="submit">Publish</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% if posts %}
+    {% for post in posts %}
+        {% include '_article.html' with context %}
+    {% endfor %}
+{% else %}
+    <p class="empty-state">No opinions filed yet. Say what you think.</p>
+{% endif %}
+
+{% endblock %}

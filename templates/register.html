@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
+{% block title %}Monthly — Register{% endblock %}
 {% block content %}
-<div class="card">
+<div class="auth-card">
     <h2>Register Account</h2>
     <form method="POST">
-        <label>Username:</label><br>
-        <input type="text" name="username" required><br>
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br>
+        <label>Username</label>
+        <input type="text" name="username" required>
+        <label>Password</label>
+        <input type="password" name="password" required>
         <button type="submit">Register</button>
     </form>
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
 </div>
 {% endblock %}

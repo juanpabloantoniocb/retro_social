@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Monthly — Creative Writing{% endblock %}
+{% block content %}
+
+<h1 class="section-heading">Creative Writing</h1>
+<p class="section-sub">Short stories, poems, fragments. Text only.</p>
+
+{% if current_user %}
+<div class="compose">
+    <p class="compose-label">Share a piece</p>
+    <form action="{{ url_for('create_post') }}" method="POST">
+        <input type="hidden" name="category" value="creative">
+        <textarea name="caption" rows="5" placeholder="Once upon a time..."></textarea>
+        <div class="compose-row" style="justify-content: flex-end;">
+            <button type="submit">Publish</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% if posts %}
+    {% for post in posts %}
+        {% include '_article.html' with context %}
+    {% endfor %}
+{% else %}
+    <p class="empty-state">Nothing written yet. This page is waiting for you.</p>
+{% endif %}
+
+{% endblock %}

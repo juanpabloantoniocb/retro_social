@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Monthly — Edit Profile{% endblock %}
+{% block content %}
+
+<div class="auth-card">
+    <h2>Edit Profile</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <label>Profile picture</label>
+        <input type="file" name="avatar" accept="image/*"><br><br>
+        <label>Bio</label>
+        <textarea name="bio" rows="4" placeholder="A line or two about you...">{{ profile_user.bio or '' }}</textarea>
+        <button type="submit">Save Changes</button>
+    </form>
+    <p class="auth-switch"><a href="{{ url_for('profile', username=profile_user.username) }}">&larr; Back to profile</a></p>
+</div>
+
+{% endblock %}
