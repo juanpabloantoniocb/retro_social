@@ -31,4 +31,45 @@
     {% if post.image_filename %}
         <img src="{{ url_for('static', filename='uploads/' + post.image_filename) }}" class="article-img" alt="">
     {% endif %}
+
+    <details class="comments-wrap">
+        <summary class="comment-toggle">
+            {{ post.comments|length }} comment{{ '' if post.comments|length == 1 else 's' }}
+        </summary>
+
+        {% if post.comments %}
+        <div class="comments">
+            {% for comment in post.comments %}
+            <div class="comment">
+                {% if comment.author.avatar_filename %}
+                    <img class="avatar" src="{{ url_for('static', filename='avatars/' + comment.author.avatar_filename) }}" alt="">
+                {% else %}
+                    <span class="avatar-fallback">{{ comment.author.username[0]|upper }}</span>
+                {% endif %}
+                <div class="comment-body">
+                    <div class="comment-meta">
+                        <a href="{{ url_for('profile', username=comment.author.username) }}">{{ comment.author.username }}</a>
+                        {% if comment.created_at %}<span class="comment-date">{{ comment.created_at.strftime('%b %-d') }}</span>{% endif %}
+                        {% if current_user and (current_user.is_admin or current_user.id == comment.user_id) %}
+                        <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="comment-del" onclick="return confirm('Delete this comment?')">delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <p class="comment-text">{{ comment.body }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if current_user %}
+        <form action="{{ url_for('create_comment', post_id=post.id) }}" method="POST" class="comment-form">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <textarea name="body" rows="1" placeholder="Add a comment..." required></textarea>
+            <button type="submit">Reply</button>
+        </form>
+        {% endif %}
+    </details>
 </div>

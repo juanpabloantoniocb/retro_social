@@ -44,6 +44,18 @@ class Post(db.Model):
     category = db.Column(db.String(20), nullable=False, default='general')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    comments = db.relationship('Comment', backref='post', lazy=True,
+                                order_by='Comment.created_at',
+                                cascade='all, delete-orphan')
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    author = db.relationship('User')
 
 
 def run_migrations():
@@ -225,6 +237,50 @@ def create_post():
         flash('Write something before posting.')
 
     return redirect(url_for(CATEGORIES[category]['endpoint']))
+
+
+@app.route('/manifesto')
+def manifesto():
+    return render_template('manifesto.html')
+
+
+@app.route('/post/<int:post_id>/comment', methods=['POST'])
+def create_comment(post_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    post = Post.query.get_or_404(post_id)
+    body = request.form.get('body', '').strip()
+    next_url = request.form.get('next')
+
+    if body:
+        comment = Comment(body=body, user_id=session['user_id'], post_id=post.id)
+        db.session.add(comment)
+        db.session.commit()
+    else:
+        flash('Write something before commenting.')
+
+    if next_url:
+        return redirect(next_url)
+    endpoint = CATEGORIES.get(post.category, CATEGORIES['general'])['endpoint']
+    return redirect(url_for(endpoint))
+
+
+@app.route('/comment/delete/<int:comment_id>', methods=['POST'])
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    is_owner = session.get('user_id') == comment.user_id
+    if not (session.get('is_admin') or is_owner):
+        flash('Unauthorized.')
+        return redirect(request.referrer or url_for('home'))
+
+    next_url = request.form.get('next')
+    db.session.delete(comment)
+    db.session.commit()
+
+    if next_url:
+        return redirect(next_url)
+    return redirect(request.referrer or url_for('home'))
 
 
 @app.route('/admin/delete/<int:post_id>', methods=['POST'])

@@ -294,6 +294,112 @@ button:hover, .btn:hover { background: var(--navy-soft); }
   text-align: center;
 }
 
+/* ---------- Manifesto ---------- */
+
+.manifesto-body {
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.manifesto-body p { margin: 0 0 16px; }
+
+/* ---------- Comments ---------- */
+
+.comments {
+  margin-top: 14px;
+  padding-left: 16px;
+  border-left: 2px solid var(--rule);
+}
+
+.comment {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.comment:last-of-type { border-bottom: none; }
+
+.comment .avatar, .comment .avatar-fallback {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+
+.comment-body { flex: 1; min-width: 0; }
+
+.comment-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+
+.comment-meta a {
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.comment-meta a:hover { color: var(--navy); text-decoration: underline; }
+
+.comment-date { color: var(--muted); }
+
+.comment-text {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+}
+
+.comment-del {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.comment-del:hover { color: var(--oxblood); background: none; }
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.comment-form textarea {
+  margin-bottom: 0;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+.comment-form button {
+  padding: 6px 14px;
+  font-size: 12px;
+  align-self: flex-start;
+}
+
+.comment-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--navy-soft);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 8px;
+}
+
+.comment-toggle:hover { color: var(--navy); }
+
 /* ---------- Avatars ---------- */
 
 .avatar {
