@@ -8,18 +8,28 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from sqlalchemy import text
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-to-any-random-words')
 
-# Database Config: Fixes Supabase connection string format for SQLAlchemy
+# Database Config: Handles Supabase string formatting for SQLAlchemy
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
+# Strip out ?sslmode=... from the URL string to prevent driver conflicts
+if "?" in db_url and "sslmode=" in db_url:
+    db_url = db_url.split("?")[0]
+
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Force SSL mode engine option for PostgreSQL connections
+if db_url.startswith("postgresql://"):
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {"sslmode": "require"}
+    }
 
 db = SQLAlchemy(app)
 
@@ -43,7 +53,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     bio = db.Column(db.Text, nullable=True, default='')
-    avatar_url = db.Column(db.String(500), nullable=True)  # <-- Changed from avatar_filename
+    avatar_url = db.Column(db.String(500), nullable=True)
     joined_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     posts = db.relationship('Post', backref='author', lazy=True)
 
@@ -51,13 +61,14 @@ class User(db.Model):
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     caption = db.Column(db.Text, nullable=True)
-    image_url = db.Column(db.String(500), nullable=True)  # <-- Changed from image_filename
+    image_url = db.Column(db.String(500), nullable=True)
     category = db.Column(db.String(20), nullable=False, default='general')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     comments = db.relationship('Comment', backref='post', lazy=True,
                                 order_by='Comment.created_at',
                                 cascade='all, delete-orphan')
+
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,9 +78,9 @@ class Comment(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
     author = db.relationship('User')
 
+
 with app.app_context():
     db.create_all()
-    run_migrations()
 
 
 def current_user():
@@ -127,7 +138,6 @@ def edit_profile():
 
         file = request.files.get('avatar')
         if file and file.filename != '':
-            # Upload directly to Cloudinary
             upload_result = cloudinary.uploader.upload(file)
             user.avatar_url = upload_result.get('secure_url')
 
@@ -195,19 +205,16 @@ def create_post():
         category = 'general'
 
     caption = request.form.get('caption', '').strip()
-    filename = None
+    image_url = None
 
-    # Images are only allowed on general (Home) posts — Opinion and
-    # Creative Writing are text-only sections.
     if category == 'general':
         file = request.files.get('image')
         if file and file.filename != '':
-            ext = os.path.splitext(secure_filename(file.filename))[1]
-            filename = f"{uuid.uuid4().hex}{ext}"
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            upload_result = cloudinary.uploader.upload(file)
+            image_url = upload_result.get('secure_url')
 
-    if caption or filename:
-        new_post = Post(caption=caption, image_filename=filename,
+    if caption or image_url:
+        new_post = Post(caption=caption, image_url=image_url,
                          category=category, user_id=session['user_id'])
         db.session.add(new_post)
         db.session.commit()
@@ -222,34 +229,27 @@ def manifesto():
     return render_template('manifesto.html')
 
 
-@app.route('/post', methods=['POST'])
-def create_post():
+@app.route('/post/<int:post_id>/comment', methods=['POST'])
+def create_comment(post_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    category = request.form.get('category', 'general')
-    if category not in CATEGORIES:
-        category = 'general'
+    post = Post.query.get_or_404(post_id)
+    body = request.form.get('body', '').strip()
+    next_url = request.form.get('next')
 
-    caption = request.form.get('caption', '').strip()
-    image_url = None
-
-    if category == 'general':
-        file = request.files.get('image')
-        if file and file.filename != '':
-            # Upload post image directly to Cloudinary
-            upload_result = cloudinary.uploader.upload(file)
-            image_url = upload_result.get('secure_url')
-
-    if caption or image_url:
-        new_post = Post(caption=caption, image_url=image_url,
-                         category=category, user_id=session['user_id'])
-        db.session.add(new_post)
+    if body:
+        comment = Comment(body=body, user_id=session['user_id'], post_id=post.id)
+        db.session.add(comment)
         db.session.commit()
     else:
-        flash('Write something before posting.')
+        flash('Write something before commenting.')
 
-    return redirect(url_for(CATEGORIES[category]['endpoint']))
+    if next_url:
+        return redirect(next_url)
+    endpoint = CATEGORIES.get(post.category, CATEGORIES['general'])['endpoint']
+    return redirect(url_for(endpoint))
+
 
 @app.route('/comment/delete/<int:comment_id>', methods=['POST'])
 def delete_comment(comment_id):
@@ -275,12 +275,8 @@ def admin_delete_post(post_id):
         return redirect(url_for('home'))
 
     post = Post.query.get_or_404(post_id)
-    if post.image_filename:
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], post.image_filename)
-        if os.path.exists(filepath):
-            os.remove(filepath)
-
     endpoint = CATEGORIES.get(post.category, CATEGORIES['general'])['endpoint']
+    
     db.session.delete(post)
     db.session.commit()
     flash('Post deleted by Admin.')
