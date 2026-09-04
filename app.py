@@ -12,23 +12,25 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-to-any-random-words')
 
-# Database Config: Handles Supabase string formatting for SQLAlchemy
+# Database Config
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
-# Strip out ?sslmode=... from the URL string to prevent driver conflicts
-if "?" in db_url and "sslmode=" in db_url:
+# Remove trailing query params like ?sslmode=... from the URL string
+if "?" in db_url:
     db_url = db_url.split("?")[0]
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Force SSL mode engine option for PostgreSQL connections
+# Explicitly tell SQLAlchemy to require SSL for PostgreSQL
 if db_url.startswith("postgresql://"):
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "connect_args": {"sslmode": "require"}
+        "connect_args": {
+            "sslmode": "require"
+        }
     }
 
 db = SQLAlchemy(app)
