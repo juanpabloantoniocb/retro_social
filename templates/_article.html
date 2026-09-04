@@ -1,8 +1,8 @@
 <div class="article">
     <div class="article-head">
         <div class="byline">
-            {% if post.author.avatar_filename %}
-                <img class="avatar" src="{{ url_for('static', filename='avatars/' + post.author.avatar_filename) }}" alt="">
+            {% if post.author.avatar_url %}
+    		<img class="avatar" src="{{ post.author.avatar_url }}" alt="">
             {% else %}
                 <span class="avatar-fallback">{{ post.author.username[0]|upper }}</span>
             {% endif %}
@@ -28,8 +28,8 @@
         <p class="article-body">{{ post.caption }}</p>
     {% endif %}
 
-    {% if post.image_filename %}
-        <img src="{{ url_for('static', filename='uploads/' + post.image_filename) }}" class="article-img" alt="">
+    {% if post.image_url %}
+    	<img src="{{ post.image_url }}" class="article-img" alt="">
     {% endif %}
 
     <details class="comments-wrap">
@@ -41,8 +41,8 @@
         <div class="comments">
             {% for comment in post.comments %}
             <div class="comment">
-                {% if comment.author.avatar_filename %}
-                    <img class="avatar" src="{{ url_for('static', filename='avatars/' + comment.author.avatar_filename) }}" alt="">
+                {% if comment.author.avatar_url %}
+                    <img class="avatar" src="{{ comment.author.avatar_url }}" alt="">
                 {% else %}
                     <span class="avatar-fallback">{{ comment.author.username[0]|upper }}</span>
                 {% endif %}

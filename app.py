@@ -1,6 +1,8 @@
 import os
 import uuid
 from datetime import datetime, timezone
+import cloudinary
+import cloudinary.uploader
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -9,15 +11,24 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import text
 
 app = Flask(__name__)
-app.secret_key = 'change-this-to-any-random-words'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['AVATAR_FOLDER'] = 'static/avatars'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.secret_key = os.environ.get('SECRET_KEY', 'change-this-to-any-random-words')
 
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['AVATAR_FOLDER'], exist_ok=True)
+# Database Config: Fixes Supabase connection string format for SQLAlchemy
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
+
+# Cloudinary Setup
+cloudinary.config(
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key = os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+)
 
 CATEGORIES = {
     'general':  {'label': 'Dispatch',        'endpoint': 'home'},
@@ -32,7 +43,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     bio = db.Column(db.Text, nullable=True, default='')
-    avatar_filename = db.Column(db.String(255), nullable=True)
+    avatar_url = db.Column(db.String(500), nullable=True)  # <-- Changed from avatar_filename
     joined_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     posts = db.relationship('Post', backref='author', lazy=True)
 
@@ -40,14 +51,13 @@ class User(db.Model):
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     caption = db.Column(db.Text, nullable=True)
-    image_filename = db.Column(db.String(255), nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)  # <-- Changed from image_filename
     category = db.Column(db.String(20), nullable=False, default='general')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     comments = db.relationship('Comment', backref='post', lazy=True,
                                 order_by='Comment.created_at',
                                 cascade='all, delete-orphan')
-
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,30 +66,6 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
     author = db.relationship('User')
-
-
-def run_migrations():
-    """Lightweight, additive migration so an existing site.db (from the
-    old single-feed schema) keeps its users and posts instead of being
-    wiped out by the new columns."""
-    with db.engine.connect() as conn:
-        user_cols = {row[1] for row in conn.execute(text("PRAGMA table_info(user)"))}
-        post_cols = {row[1] for row in conn.execute(text("PRAGMA table_info(post)"))}
-
-        if 'bio' not in user_cols:
-            conn.execute(text("ALTER TABLE user ADD COLUMN bio TEXT DEFAULT ''"))
-        if 'avatar_filename' not in user_cols:
-            conn.execute(text("ALTER TABLE user ADD COLUMN avatar_filename VARCHAR(255)"))
-        if 'joined_at' not in user_cols:
-            conn.execute(text("ALTER TABLE user ADD COLUMN joined_at DATETIME"))
-
-        if 'category' not in post_cols:
-            conn.execute(text("ALTER TABLE post ADD COLUMN category VARCHAR(20) DEFAULT 'general'"))
-        if 'created_at' not in post_cols:
-            conn.execute(text("ALTER TABLE post ADD COLUMN created_at DATETIME"))
-
-        conn.commit()
-
 
 with app.app_context():
     db.create_all()
@@ -141,17 +127,9 @@ def edit_profile():
 
         file = request.files.get('avatar')
         if file and file.filename != '':
-            ext = os.path.splitext(secure_filename(file.filename))[1].lower()
-            if ext in {'.png', '.jpg', '.jpeg', '.gif', '.webp'}:
-                filename = f"{uuid.uuid4().hex}{ext}"
-                file.save(os.path.join(app.config['AVATAR_FOLDER'], filename))
-                if user.avatar_filename:
-                    old_path = os.path.join(app.config['AVATAR_FOLDER'], user.avatar_filename)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                user.avatar_filename = filename
-            else:
-                flash('Avatar must be an image file (png, jpg, gif, or webp).')
+            # Upload directly to Cloudinary
+            upload_result = cloudinary.uploader.upload(file)
+            user.avatar_url = upload_result.get('secure_url')
 
         db.session.commit()
         flash('Profile updated.')
@@ -244,27 +222,34 @@ def manifesto():
     return render_template('manifesto.html')
 
 
-@app.route('/post/<int:post_id>/comment', methods=['POST'])
-def create_comment(post_id):
+@app.route('/post', methods=['POST'])
+def create_post():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    post = Post.query.get_or_404(post_id)
-    body = request.form.get('body', '').strip()
-    next_url = request.form.get('next')
+    category = request.form.get('category', 'general')
+    if category not in CATEGORIES:
+        category = 'general'
 
-    if body:
-        comment = Comment(body=body, user_id=session['user_id'], post_id=post.id)
-        db.session.add(comment)
+    caption = request.form.get('caption', '').strip()
+    image_url = None
+
+    if category == 'general':
+        file = request.files.get('image')
+        if file and file.filename != '':
+            # Upload post image directly to Cloudinary
+            upload_result = cloudinary.uploader.upload(file)
+            image_url = upload_result.get('secure_url')
+
+    if caption or image_url:
+        new_post = Post(caption=caption, image_url=image_url,
+                         category=category, user_id=session['user_id'])
+        db.session.add(new_post)
         db.session.commit()
     else:
-        flash('Write something before commenting.')
+        flash('Write something before posting.')
 
-    if next_url:
-        return redirect(next_url)
-    endpoint = CATEGORIES.get(post.category, CATEGORIES['general'])['endpoint']
-    return redirect(url_for(endpoint))
-
+    return redirect(url_for(CATEGORIES[category]['endpoint']))
 
 @app.route('/comment/delete/<int:comment_id>', methods=['POST'])
 def delete_comment(comment_id):

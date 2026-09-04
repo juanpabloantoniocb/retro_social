@@ -3,11 +3,11 @@
 {% block content %}
 
 <div class="profile-header">
-    {% if profile_user.avatar_filename %}
-        <img class="avatar-large" src="{{ url_for('static', filename='avatars/' + profile_user.avatar_filename) }}" alt="">
-    {% else %}
-        <span class="avatar-fallback-large">{{ profile_user.username[0]|upper }}</span>
-    {% endif %}
+	{% if profile_user.avatar_url %}
+	    	<img class="avatar-large" src="{{ profile_user.avatar_url }}" alt="">
+	{% else %}
+	    	<span class="avatar-fallback-large">	{{ profile_user.username[0]|upper }}</span>
+{% endif %}
     <div>
         <p class="profile-name">{{ profile_user.username }}{% if profile_user.is_admin %} <span class="admin-badge">ADMIN</span>{% endif %}</p>
         <p class="profile-meta">
