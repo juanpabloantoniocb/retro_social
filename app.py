@@ -12,24 +12,25 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-to-any-random-words')
 
-# Database Config
+# Database Config: Cleans URL and handles Supabase/PgBouncer for SQLAlchemy 2.0
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
-# Remove trailing query params like ?sslmode=... from the URL string
+# Strip out query parameters from the string to prevent driver conflicts
 if "?" in db_url:
     db_url = db_url.split("?")[0]
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Explicitly tell SQLAlchemy to require SSL for PostgreSQL
+# Pass connection parameters explicitly via engine options to fix Supabase e3q8 error
 if db_url.startswith("postgresql://"):
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         "connect_args": {
-            "sslmode": "require"
+            "sslmode": "require",
+            "prepare_threshold": None  # Disables prepared statements for PgBouncer compatibility
         }
     }
 
@@ -278,7 +279,7 @@ def admin_delete_post(post_id):
 
     post = Post.query.get_or_404(post_id)
     endpoint = CATEGORIES.get(post.category, CATEGORIES['general'])['endpoint']
-    
+
     db.session.delete(post)
     db.session.commit()
     flash('Post deleted by Admin.')
